@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#2563eb">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="禾木纸管报价">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="x5-orientation" content="portrait">
+  <meta name="x5-fullscreen" content="true">
+  <title>禾木纸管报价器</title>
+  <script>
+    // 内联 manifest，不依赖外部文件
+    (function(){
+      var m = {
+        "name":"禾木纸管报价器","short_name":"禾木纸管报价",
+        "description":"纸管成本与报价计算工具",
+        "start_url":location.href,"display":"standalone",
+        "background_color":"#ffffff","theme_color":"#2563eb",
+        "orientation":"portrait-primary","lang":"zh-CN",
+        "categories":["business","utilities"],
+        "icons":[
+          {"src":"icon-192.png","sizes":"192x192","type":"image/png"},
+          {"src":"icon-512.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}
+        ],
+        "scope":"/","prefer_related_applications":false
+      };
+      var blob = new Blob([JSON.stringify(m)],{type:'application/json'});
+      var link = document.createElement('link');
+      link.rel = 'manifest';
+      link.href = URL.createObjectURL(blob);
+      document.head.appendChild(link);
+    })();
+  </script>
+  <style>
+    :root {
+      --primary: #1a73e8;
+      --primary-dark: #1557b0;
+      --bg: #f5f5f5;
+      --card: #ffffff;
+      --text: #1f1f1f;
+      --text-secondary: #5f6368;
+      --border: #e0e0e0;
+      --result-bg: #e8f0fe;
+      --accent: #ea4335;
+      --success: #0d904f;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding-bottom: 40px;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .header {
+      background: var(--primary);
+      color: #fff;
+      padding: 16px 20px;
+      text-align: center;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+    .header h1 { font-size: 20px; font-weight: 600; }
+    .header p { font-size: 12px; opacity: 0.85; margin-top: 2px; }
+
+    .container {
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+
+    .card {
+      background: var(--card);
+      border-radius: 12px;
+      padding: 16px 18px;
+      margin-bottom: 14px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+    .card-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .card-title .icon {
+      width: 28px; height: 28px;
+      border-radius: 8px;
+      background: var(--primary);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    .form-row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .form-group {
+      flex: 1;
+      margin-bottom: 12px;
+    }
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 5px;
+      font-weight: 500;
+    }
+    .form-group .unit {
+      font-weight: 400;
+      color: #999;
+      font-size: 11px;
+    }
+    .input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .input-wrapper input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      font-size: 16px;
+      color: var(--text);
+      background: #fafafa;
+      transition: all 0.2s;
+      -webkit-appearance: none;
+      outline: none;
+    }
+    .input-wrapper input:focus {
+      border-color: var(--primary);
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(26,115,232,0.1);
+    }
+    .input-suffix {
+      position: absolute;
+      right: 12px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      pointer-events: none;
+      font-weight: 500;
+    }
+
+    .density-preset {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 4px;
+      flex-wrap: wrap;
+    }
+    .preset-btn {
+      padding: 5px 12px;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      font-size: 12px;
+      background: #fff;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .preset-btn:active,
+    .preset-btn.active {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+
+    .result-area {
+      display: none;
+    }
+    .result-area.show {
+      display: block;
+    }
+
+    .result-card {
+      background: linear-gradient(135deg, #e8f0fe 0%, #d2e3fc 100%);
+      border-radius: 12px;
+      padding: 16px 18px;
+      margin-bottom: 10px;
+    }
+    .result-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+    }
+    .result-row + .result-row {
+      border-top: 1px solid rgba(0,0,0,0.08);
+    }
+    .result-label {
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+    .result-value {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .result-value.big {
+      font-size: 22px;
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 5px 0;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .btn {
+      flex: 1;
+      padding: 12px 16px;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+    }
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+    }
+    .btn-primary:active {
+      background: var(--primary-dark);
+      transform: scale(0.97);
+    }
+    .btn-outline {
+      background: #fff;
+      color: var(--primary);
+      border: 1.5px solid var(--primary);
+    }
+    .btn-outline:active {
+      background: #e8f0fe;
+      transform: scale(0.97);
+    }
+
+    .history-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      font-size: 13px;
+    }
+    .history-item + .history-item {
+      border-top: 1px solid var(--border);
+    }
+    .history-spec {
+      color: var(--text);
+    }
+    .history-price {
+      font-weight: 600;
+      color: var(--accent);
+    }
+    .history-time {
+      font-size: 11px;
+      color: #aaa;
+    }
+    .history-delete {
+      color: #ccc;
+      cursor: pointer;
+      font-size: 16px;
+      padding: 4px;
+    }
+    .history-delete:active { color: var(--accent); }
+
+    .empty-state {
+      text-align: center;
+      padding: 20px;
+      color: #bbb;
+      font-size: 13px;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: #333;
+      color: #fff;
+      padding: 10px 24px;
+      border-radius: 20px;
+      font-size: 14px;
+      opacity: 0;
+      transition: all 0.3s;
+      z-index: 100;
+      pointer-events: none;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .formula-hint {
+      font-size: 11px;
+      color: #999;
+      text-align: center;
+      padding: 8px;
+      line-height: 1.5;
+    }
+
+    /* Toggle Switch */
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+    }
+    .toggle-label {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text);
+    }
+    .toggle-switch {
+      position: relative;
+      width: 48px;
+      height: 28px;
+      flex-shrink: 0;
+    }
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .toggle-slider {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: var(--border);
+      border-radius: 28px;
+      transition: 0.25s;
+    }
+    .toggle-slider:before {
+      content: "";
+      position: absolute;
+      height: 22px;
+      width: 22px;
+      left: 3px;
+      bottom: 3px;
+      background: #fff;
+      border-radius: 50%;
+      transition: 0.25s;
+    }
+    input:checked + .toggle-slider {
+      background: var(--primary);
+    }
+    input:checked + .toggle-slider:before {
+      transform: translateX(20px);
+    }
+    .bottom-paper-fields {
+      display: none;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px dashed var(--border);
+    }
+    .bottom-paper-fields.show {
+      display: block;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #121212;
+        --card: #1e1e1e;
+        --text: #e0e0e0;
+        --text-secondary: #9aa0a6;
+        --border: #3c4043;
+        --result-bg: #1a3a5c;
+      }
+      .input-wrapper input {
+        background: #2d2d2d;
+        color: #e0e0e0;
+      }
+      .input-wrapper input:focus {
+        background: #333;
+      }
+      .result-card {
+        background: linear-gradient(135deg, #1a3a5c 0%, #0d2b4a 100%);
+      }
+      .preset-btn { background: #2d2d2d; }
+      .btn-outline { background: #1e1e1e; }
+      .btn-outline:active { background: #1a3a5c; }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>📐 禾木纸管报价器</h1>
+    <p>输入规格参数，一键算出成本和报价</p>
+  </div>
+
+  <div class="container">
+    <!-- 尺寸参数 -->
+    <div class="card">
+      <div class="card-title">
+        <span class="icon">📏</span> 纸管规格
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>内径 <span class="unit">(mm)</span></label>
+          <div class="input-wrapper">
+            <input type="number" id="innerDiameter" placeholder="例: 76" step="0.1" min="1" inputmode="decimal">
+            <span class="input-suffix">mm</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>壁厚 <span class="unit">(mm)</span></label>
+          <div class="input-wrapper">
+            <input type="number" id="wallThickness" placeholder="例: 5" step="0.1" min="0.1" inputmode="decimal">
+            <span class="input-suffix">mm</span>
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>长度 <span class="unit">(mm)</span></label>
+        <div class="input-wrapper">
+          <input type="number" id="length" placeholder="例: 1000" step="0.1" min="1" inputmode="decimal">
+          <span class="input-suffix">mm</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 管身材料 -->
+    <div class="card">
+      <div class="card-title">
+        <span class="icon">💰</span> 管身材料
+      </div>
+      <div class="form-group">
+        <label>纸张密度 <span class="unit">(g/cm³)</span></label>
+        <div class="density-preset">
+          <span class="preset-btn active" data-density="0.78">常规 0.78</span>
+          <span class="preset-btn" data-density="0.80">高密度 0.80</span>
+          <span class="preset-btn" data-density="0.70">纱管纸 0.70</span>
+          <span class="preset-btn" data-density="0.65">轻质纸 0.65</span>
+        </div>
+        <div class="input-wrapper" style="margin-top:8px;">
+          <input type="number" id="density" value="0.78" step="0.01" min="0.1" inputmode="decimal">
+          <span class="input-suffix">g/cm³</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>报价单价 <span class="unit">(元/公斤)</span></label>
+        <div class="input-wrapper">
+          <input type="number" id="pricePerKg" placeholder="例: 6.5" step="0.01" min="0.01" inputmode="decimal">
+          <span class="input-suffix">元/kg</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 底纸（内侧，可选） -->
+    <div class="card">
+      <div class="card-title">
+        <span class="icon">🔵</span> 底纸（内侧）
+        <span style="font-size:11px;color:#999;margin-left:4px;">（可选）</span>
+      </div>
+      <label class="toggle-row">
+        <span class="toggle-label">计入底纸</span>
+        <div class="toggle-switch">
+          <input type="checkbox" id="enableInnerPaper">
+          <span class="toggle-slider"></span>
+        </div>
+      </label>
+      <div class="bottom-paper-fields" id="innerPaperFields">
+        <div style="font-size:12px;color:var(--text-secondary);margin-bottom:10px;">💡 纸管内侧一层的面纸</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>底纸克重 <span class="unit">(g/m²)</span></label>
+            <div class="input-wrapper">
+              <input type="number" id="innerGrammage" placeholder="例: 300" step="1" min="1" inputmode="decimal">
+              <span class="input-suffix">g/m²</span>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>底纸报价单价 <span class="unit">(元/公斤)</span></label>
+          <div class="input-wrapper">
+            <input type="number" id="innerPrice" placeholder="例: 5.0" step="0.01" min="0.01" inputmode="decimal">
+            <span class="input-suffix">元/kg</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 面纸（外侧，可选） -->
+    <div class="card">
+      <div class="card-title">
+        <span class="icon">🟠</span> 面纸（外侧）
+        <span style="font-size:11px;color:#999;margin-left:4px;">（可选）</span>
+      </div>
+      <label class="toggle-row">
+        <span class="toggle-label">计入面纸</span>
+        <div class="toggle-switch">
+          <input type="checkbox" id="enableOuterPaper">
+          <span class="toggle-slider"></span>
+        </div>
+      </label>
+      <div class="bottom-paper-fields" id="outerPaperFields">
+        <div style="font-size:12px;color:var(--text-secondary);margin-bottom:10px;">💡 纸管外侧一层的面纸</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>面纸克重 <span class="unit">(g/m²)</span></label>
+            <div class="input-wrapper">
+              <input type="number" id="outerGrammage" placeholder="例: 300" step="1" min="1" inputmode="decimal">
+              <span class="input-suffix">g/m²</span>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>面纸报价单价 <span class="unit">(元/公斤)</span></label>
+          <div class="input-wrapper">
+            <input type="number" id="outerPrice" placeholder="例: 5.0" step="0.01" min="0.01" inputmode="decimal">
+            <span class="input-suffix">元/kg</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 运费（可选） -->
+    <div class="card">
+      <div class="card-title">
+        <span class="icon">🚚</span> 运费
+        <span style="font-size:11px;color:#999;margin-left:4px;">（可选）</span>
+      </div>
+      <label class="toggle-row">
+        <span class="toggle-label">计入运费</span>
+        <div class="toggle-switch">
+          <input type="checkbox" id="enableFreight">
+          <span class="toggle-slider"></span>
+        </div>
+      </label>
+      <div class="bottom-paper-fields" id="freightFields">
+        <div class="form-group">
+          <label>每根运费 <span class="unit">(元/根)</span></label>
+          <div class="input-wrapper">
+            <input type="number" id="freightCost" placeholder="例: 0.50" step="0.01" min="0" inputmode="decimal">
+            <span class="input-suffix">元/根</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 计算结果 -->
+    <div class="result-area" id="resultArea">
+      <div class="card">
+        <div class="card-title">
+          <span class="icon">📊</span> 计算结果
+        </div>
+        <div class="result-card">
+          <div class="detail-row">
+            <span>外径</span>
+            <span id="displayOuterDia">--</span>
+          </div>
+          <div class="detail-row">
+            <span>管身重量</span>
+            <span id="displayWeight">--</span>
+          </div>
+          <div class="detail-row">
+            <span>管身报价</span>
+            <span id="displayTubeQuote">--</span>
+          </div>
+          <div class="detail-row" id="innerWeightRow" style="display:none;">
+            <span>底纸重量</span>
+            <span id="displayInnerWeight">--</span>
+          </div>
+          <div class="detail-row" id="innerQuoteRow" style="display:none;">
+            <span>底纸报价</span>
+            <span id="displayInnerQuote">--</span>
+          </div>
+          <div class="detail-row" id="outerWeightRow" style="display:none;">
+            <span>面纸重量</span>
+            <span id="displayOuterWeight">--</span>
+          </div>
+          <div class="detail-row" id="outerQuoteRow" style="display:none;">
+            <span>面纸报价</span>
+            <span id="displayOuterQuote">--</span>
+          </div>
+          <div class="detail-row" id="freightRow" style="display:none;">
+            <span>运费</span>
+            <span id="displayFreight">--</span>
+          </div>
+          <div class="result-row">
+            <span class="result-label">总报价</span>
+            <span class="result-value big" id="displayQuote">--</span>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-outline" id="btnSave">💾 保存记录</button>
+          <button class="btn btn-primary" id="btnShare">📋 复制报价</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 历史记录 -->
+    <div class="card" id="historyCard">
+      <div class="card-title">
+        <span class="icon">📝</span> 历史记录
+        <span style="margin-left:auto;font-size:12px;color:var(--primary);cursor:pointer;" id="btnClearHistory">清空</span>
+      </div>
+      <div id="historyList">
+        <div class="empty-state">暂无记录，输入参数后会自动计算</div>
+      </div>
+    </div>
+
+    <div class="formula-hint">
+      管身：重量 = π×(外径²−内径²)/4 × 长度 × 密度 | 管身报价 = 重量 × 报价单价 |
+      底纸：重量 = π×内径 × 长度 × 克重 | 报价 = 重量 × 底纸单价 |
+      面纸：重量 = π×外径 × 长度 × 克重 | 报价 = 重量 × 面纸单价 |
+      总报价 = 管身报价 + 底纸报价 + 面纸报价 + 运费
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ============ DOM 引用 ============
+    const innerDiaInput = document.getElementById('innerDiameter');
+    const wallThickInput = document.getElementById('wallThickness');
+    const lengthInput = document.getElementById('length');
+    const densityInput = document.getElementById('density');
+    const priceInput = document.getElementById('pricePerKg');
+
+    // 底纸（内侧）
+    const enableInner = document.getElementById('enableInnerPaper');
+    const innerFields = document.getElementById('innerPaperFields');
+    const innerGrammageInput = document.getElementById('innerGrammage');
+    const innerPriceInput = document.getElementById('innerPrice');
+
+    // 面纸（外侧）
+    const enableOuter = document.getElementById('enableOuterPaper');
+    const outerFields = document.getElementById('outerPaperFields');
+    const outerGrammageInput = document.getElementById('outerGrammage');
+    const outerPriceInput = document.getElementById('outerPrice');
+
+    // 运费
+    const enableFreight = document.getElementById('enableFreight');
+    const freightFields = document.getElementById('freightFields');
+    const freightCostInput = document.getElementById('freightCost');
+
+    // 结果区
+    const resultArea = document.getElementById('resultArea');
+    const displayOuterDia = document.getElementById('displayOuterDia');
+    const displayWeight = document.getElementById('displayWeight');
+    const displayTubeQuote = document.getElementById('displayTubeQuote');
+    const displayQuote = document.getElementById('displayQuote');
+
+    const innerWeightRow = document.getElementById('innerWeightRow');
+    const innerQuoteRow = document.getElementById('innerQuoteRow');
+    const displayInnerWeight = document.getElementById('displayInnerWeight');
+    const displayInnerQuote = document.getElementById('displayInnerQuote');
+
+    const outerWeightRow = document.getElementById('outerWeightRow');
+    const outerQuoteRow = document.getElementById('outerQuoteRow');
+    const displayOuterWeight = document.getElementById('displayOuterWeight');
+    const displayOuterQuote = document.getElementById('displayOuterQuote');
+
+    const freightRow = document.getElementById('freightRow');
+    const displayFreight = document.getElementById('displayFreight');
+
+    const historyList = document.getElementById('historyList');
+    const toast = document.getElementById('toast');
+
+    // ============ 开关逻辑 ============
+    function setupToggle(checkbox, fields) {
+      checkbox.addEventListener('change', () => {
+        if (checkbox.checked) fields.classList.add('show');
+        else fields.classList.remove('show');
+        calculate();
+      });
+    }
+    setupToggle(enableInner, innerFields);
+    setupToggle(enableOuter, outerFields);
+    setupToggle(enableFreight, freightFields);
+
+    // ============ 密度预设按钮 ============
+    document.querySelectorAll('.preset-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        densityInput.value = btn.dataset.density;
+        calculate();
+      });
+    });
+
+    // ============ 输入联动计算 ============
+    [innerDiaInput, wallThickInput, lengthInput, densityInput, priceInput,
+     innerGrammageInput, innerPriceInput, outerGrammageInput, outerPriceInput,
+     freightCostInput].forEach(el => {
+      el.addEventListener('input', calculate);
+    });
+
+    // 密度手动输入时取消预设高亮
+    densityInput.addEventListener('input', () => {
+      document.querySelectorAll('.preset-btn').forEach(b => {
+        b.classList.remove('active');
+        if (Math.abs(parseFloat(b.dataset.density) - parseFloat(densityInput.value || 0)) < 0.005) {
+          b.classList.add('active');
+        }
+      });
+      calculate();
+    });
+
+    // ============ 计算单层面纸重量 ============
+    // diameter: mm, length: mm, grammage: g/m²
+    function calcSurfaceWeight(diameter, length, grammage) {
+      const areaM2 = Math.PI * (diameter / 1000) * (length / 1000);
+      return areaM2 * grammage; // grams
+    }
+
+    // ============ 核心计算 ============
+    function calculate() {
+      const innerDia = parseFloat(innerDiaInput.value);
+      const wallThick = parseFloat(wallThickInput.value);
+      const length = parseFloat(lengthInput.value);
+      const density = parseFloat(densityInput.value);
+      const price = parseFloat(priceInput.value);
+
+      const hasDims = innerDia > 0 && wallThick > 0 && length > 0;
+      if (!hasDims) {
+        resultArea.classList.remove('show');
+        return;
+      }
+
+      const outerDia = innerDia + 2 * wallThick;
+
+      // 管身重量 (cm单位)
+      const innerDiaCm = innerDia / 10;
+      const outerDiaCm = outerDia / 10;
+      const lengthCm = length / 10;
+      const crossArea = Math.PI * (Math.pow(outerDiaCm, 2) - Math.pow(innerDiaCm, 2)) / 4;
+      const volume = crossArea * lengthCm;
+      const tubeWeightG = volume * (density || 0.78);
+
+      displayOuterDia.textContent = outerDia.toFixed(1) + ' mm';
+      displayWeight.textContent = formatWeight(tubeWeightG);
+      resultArea.classList.add('show');
+
+      // 管身报价
+      let tubeQuote = 0;
+      if (price > 0) {
+        tubeQuote = (tubeWeightG / 1000) * price;
+        displayTubeQuote.textContent = '¥' + tubeQuote.toFixed(2);
+      } else {
+        displayTubeQuote.textContent = '请填写报价单价';
+      }
+
+      let totalQuote = tubeQuote;
+
+      // 底纸（内侧）
+      let innerQuote = 0;
+      if (enableInner.checked && parseFloat(innerGrammageInput.value) > 0) {
+        const ig = parseFloat(innerGrammageInput.value);
+        const iw = calcSurfaceWeight(innerDia, length, ig);
+        displayInnerWeight.textContent = formatWeight(iw);
+        innerWeightRow.style.display = '';
+        innerQuoteRow.style.display = '';
+        const ip = parseFloat(innerPriceInput.value);
+        if (ip > 0) {
+          innerQuote = (iw / 1000) * ip;
+          displayInnerQuote.textContent = '¥' + innerQuote.toFixed(2);
+        } else {
+          displayInnerQuote.textContent = '请填写底纸单价';
+        }
+        totalQuote += innerQuote;
+      } else {
+        innerWeightRow.style.display = 'none';
+        innerQuoteRow.style.display = 'none';
+      }
+
+      // 面纸（外侧）
+      let outerQuote = 0;
+      if (enableOuter.checked && parseFloat(outerGrammageInput.value) > 0) {
+        const og = parseFloat(outerGrammageInput.value);
+        const ow = calcSurfaceWeight(outerDia, length, og);
+        displayOuterWeight.textContent = formatWeight(ow);
+        outerWeightRow.style.display = '';
+        outerQuoteRow.style.display = '';
+        const op = parseFloat(outerPriceInput.value);
+        if (op > 0) {
+          outerQuote = (ow / 1000) * op;
+          displayOuterQuote.textContent = '¥' + outerQuote.toFixed(2);
+        } else {
+          displayOuterQuote.textContent = '请填写面纸单价';
+        }
+        totalQuote += outerQuote;
+      } else {
+        outerWeightRow.style.display = 'none';
+        outerQuoteRow.style.display = 'none';
+      }
+
+      // 运费
+      let freightCost = 0;
+      if (enableFreight.checked) {
+        freightCost = parseFloat(freightCostInput.value) || 0;
+        if (freightCost > 0) {
+          displayFreight.textContent = '¥' + freightCost.toFixed(2);
+          freightRow.style.display = '';
+          totalQuote += freightCost;
+        } else {
+          displayFreight.textContent = '请填写运费';
+          freightRow.style.display = '';
+        }
+      } else {
+        freightRow.style.display = 'none';
+      }
+
+      // 总报价
+      if (price > 0) {
+        displayQuote.textContent = '¥' + totalQuote.toFixed(2);
+      } else {
+        displayQuote.textContent = '--';
+      }
+    }
+
+    function formatWeight(grams) {
+      if (grams >= 1000) return (grams / 1000).toFixed(2) + ' kg';
+      return grams.toFixed(1) + ' g';
+    }
+
+    // ============ 保存记录 ============
+    document.getElementById('btnSave').addEventListener('click', () => {
+      const innerDia = parseFloat(innerDiaInput.value);
+      const wallThick = parseFloat(wallThickInput.value);
+      const length = parseFloat(lengthInput.value);
+      const price = parseFloat(priceInput.value);
+
+      if (!innerDia || !wallThick || !length || !price) {
+        showToast('请先填写完整的规格和报价单价');
+        return;
+      }
+
+      const record = {
+        innerDia, wallThick, length,
+        quote: displayQuote.textContent,
+        tubeQuote: displayTubeQuote.textContent,
+        useInner: enableInner.checked,
+        useOuter: enableOuter.checked,
+        innerGrammage: enableInner.checked ? parseFloat(innerGrammageInput.value) || 0 : 0,
+        outerGrammage: enableOuter.checked ? parseFloat(outerGrammageInput.value) || 0 : 0,
+        useFreight: enableFreight.checked,
+        freightCost: enableFreight.checked ? parseFloat(freightCostInput.value) || 0 : 0,
+        time: new Date().toLocaleString('zh-CN')
+      };
+
+      let records = JSON.parse(localStorage.getItem('tubeHistory') || '[]');
+      records.unshift(record);
+      if (records.length > 50) records = records.slice(0, 50);
+      localStorage.setItem('tubeHistory', JSON.stringify(records));
+
+      renderHistory();
+      showToast('✅ 已保存');
+    });
+
+    // ============ 复制报价 ============
+    document.getElementById('btnShare').addEventListener('click', () => {
+      const innerDia = innerDiaInput.value;
+      const wallThick = wallThickInput.value;
+      const length = lengthInput.value;
+      const quote = displayQuote.textContent;
+
+      if (!quote || quote === '--') {
+        showToast('请先完成计算');
+        return;
+      }
+
+      const text = `【禾木纸管报价】\n规格：内径${innerDia}mm × 壁厚${wallThick}mm × 长度${length}mm\n报价：${quote}`;
+
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(() => showToast('📋 已复制到剪贴板'));
+      } else {
+        showToast('复制失败，请手动复制');
+      }
+    });
+
+    // ============ 历史记录 ============
+    function renderHistory() {
+      const records = JSON.parse(localStorage.getItem('tubeHistory') || '[]');
+      if (records.length === 0) {
+        historyList.innerHTML = '<div class="empty-state">暂无记录，输入参数后会自动计算</div>';
+        return;
+      }
+
+      historyList.innerHTML = records.map((r, i) => `
+        <div class="history-item">
+          <div>
+            <div class="history-spec">内${r.innerDia}×厚${r.wallThick}×长${r.length}mm${r.useInner ? ' +底纸' : ''}${r.useOuter ? ' +面纸' : ''}${r.useFreight ? ' +运费' : ''}</div>
+            <div class="history-time">${r.time}</div>
+          </div>
+          <div style="text-align:right;">
+            <div class="history-price">${r.quote}</div>
+          </div>
+          <span class="history-delete" data-index="${i}">×</span>
+        </div>
+      `).join('');
+
+      document.querySelectorAll('.history-delete').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const idx = parseInt(btn.dataset.index);
+          let records = JSON.parse(localStorage.getItem('tubeHistory') || '[]');
+          records.splice(idx, 1);
+          localStorage.setItem('tubeHistory', JSON.stringify(records));
+          renderHistory();
+        });
+      });
+    }
+
+    document.getElementById('btnClearHistory').addEventListener('click', () => {
+      if (confirm('确定要清空所有历史记录吗？')) {
+        localStorage.removeItem('tubeHistory');
+        renderHistory();
+        showToast('已清空');
+      }
+    });
+
+    // ============ Toast ============
+    function showToast(msg) {
+      toast.textContent = msg;
+      toast.classList.add('show');
+      clearTimeout(toast._timeout);
+      toast._timeout = setTimeout(() => toast.classList.remove('show'), 2000);
+    }
+
+    // ============ 初始化 ============
+    renderHistory();
+
+    // SW 注册：失败不影响页面使用
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js', {updateViaCache: 'all'})
+        .then(function(reg) {
+          console.log('[PWA] SW 已注册:', reg.scope);
+        })
+        .catch(function(err) {
+          console.warn('[PWA] SW 注册失败（页面仍可正常使用）:', err.message);
+        });
+    }
+  </script>
+</body>
+</html>
