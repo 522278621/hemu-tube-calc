@@ -158,30 +158,6 @@
       font-weight: 500;
     }
 
-    .density-preset {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 4px;
-      flex-wrap: wrap;
-    }
-    .preset-btn {
-      padding: 5px 12px;
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      font-size: 12px;
-      background: #fff;
-      color: var(--text-secondary);
-      cursor: pointer;
-      transition: all 0.15s;
-      white-space: nowrap;
-    }
-    .preset-btn:active,
-    .preset-btn.active {
-      background: var(--primary);
-      color: #fff;
-      border-color: var(--primary);
-    }
-
     .result-area {
       display: none;
     }
@@ -401,7 +377,6 @@
       .result-card {
         background: linear-gradient(135deg, #1a3a5c 0%, #0d2b4a 100%);
       }
-      .preset-btn { background: #2d2d2d; }
       .btn-outline { background: #1e1e1e; }
       .btn-outline:active { background: #1a3a5c; }
     }
@@ -447,18 +422,12 @@
     <!-- 管身材料 -->
     <div class="card">
       <div class="card-title">
-        <span class="icon">💰</span> 管身材料
+        <span class="icon">🧾</span> 纱管纸
       </div>
       <div class="form-group">
         <label>纸张密度 <span class="unit">(g/cm³)</span></label>
-        <div class="density-preset">
-          <span class="preset-btn active" data-density="0.78">常规 0.78</span>
-          <span class="preset-btn" data-density="0.80">高密度 0.80</span>
-          <span class="preset-btn" data-density="0.70">纱管纸 0.70</span>
-          <span class="preset-btn" data-density="0.65">轻质纸 0.65</span>
-        </div>
-        <div class="input-wrapper" style="margin-top:8px;">
-          <input type="number" id="density" value="0.78" step="0.01" min="0.1" inputmode="decimal">
+        <div class="input-wrapper">
+          <input type="number" id="density" value="0.76" step="0.01" min="0.1" inputmode="decimal">
           <span class="input-suffix">g/cm³</span>
         </div>
       </div>
@@ -695,32 +664,11 @@
     setupToggle(enableOuter, outerFields);
     setupToggle(enableFreight, freightFields);
 
-    // ============ 密度预设按钮 ============
-    document.querySelectorAll('.preset-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        densityInput.value = btn.dataset.density;
-        calculate();
-      });
-    });
-
     // ============ 输入联动计算 ============
     [innerDiaInput, wallThickInput, lengthInput, densityInput, priceInput,
      innerGrammageInput, innerPriceInput, outerGrammageInput, outerPriceInput,
      freightCostInput].forEach(el => {
       el.addEventListener('input', calculate);
-    });
-
-    // 密度手动输入时取消预设高亮
-    densityInput.addEventListener('input', () => {
-      document.querySelectorAll('.preset-btn').forEach(b => {
-        b.classList.remove('active');
-        if (Math.abs(parseFloat(b.dataset.density) - parseFloat(densityInput.value || 0)) < 0.005) {
-          b.classList.add('active');
-        }
-      });
-      calculate();
     });
 
     // ============ 计算单层面纸重量 ============
@@ -752,7 +700,7 @@
       const lengthCm = length / 10;
       const crossArea = Math.PI * (Math.pow(outerDiaCm, 2) - Math.pow(innerDiaCm, 2)) / 4;
       const volume = crossArea * lengthCm;
-      const tubeWeightG = volume * (density || 0.78);
+      const tubeWeightG = volume * (density || 0.76);
 
       displayOuterDia.textContent = outerDia.toFixed(1) + ' mm';
       displayWeight.textContent = formatWeight(tubeWeightG);
